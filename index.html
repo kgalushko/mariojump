@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>Super Mario Jump</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- Chrome, Firefox OS and Opera -->
+    <meta name="theme-color" content="#6b8cff">
+    <!-- Windows Phone -->
+    <meta name="msapplication-navbutton-color" content="#6b8cff">
+    <!-- iOS Safari -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="#6b8cff">
+      <style>
+        * {
+              -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+              -webkit-focus-ring-color: rgba(255, 255, 255, 0);
+              outline: none;
+              -moz-user-select: -moz-none;
+              -o-user-select: none;
+              -khtml-user-select: none;
+              -webkit-user-select: none;
+              user-select: none;
+              -webkit-text-size-adjust: none;
+          }
+          body {
+            overflow: hidden;
+            margin:0px;
+            padding:0px;
+            text-align:center;
+            font-family: "Press Start 2P";
+          }
+          canvas{
+            outline:0;
+            border:1px solid #000;
+            margin-left: auto;
+            margin-right: auto;
+            font-family: 'Press Start 2P';
+          }
+      </style>
+  </head>
+  <body>
+    <canvas id='canvas'></canvas>
+    <script src="js/game.js"></script>
+  </body>
+</html>
