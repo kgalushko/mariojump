@@ -28,12 +28,47 @@ window.requestAnimFrame = (function() {
         window.oRequestAnimationFrame      || 
         window.msRequestAnimationFrame     || 
         function(/* function */ callback, /* DOMElement */ element){
-             window.setTimeout(callback, 1000 / 50);
+             window.setTimeout(callback, 1000 / 60);
         };
 })();
 
 changeWorld(0);
 soundJump.volume = 0.7;
+
+var soundFlag = true;
+var musicFlag = true;
+
+function musicOff() {
+    music.volume = 0;
+    musicUnderground.volume = 0;
+    musicFlag = false;
+}
+
+function musicOn() {
+    music.volume = 1;
+    musicUnderground.volume = 1;
+    musicFlag = true;
+}
+
+function soundOff() {
+    soundJump.volume = 0;
+    soundJumpSuper.volume = 0;
+    soundCoin.volume = 0;
+    soundDie.volume = 0;
+    soundPause.volume = 0;
+    soundPowerUp.volume = 0;
+    soundFlag = false;
+}
+
+function soundOn() {
+    soundJump.volume = 1;
+    soundJumpSuper.volume = 1;
+    soundCoin.volume = 1;
+    soundDie.volume = 1;
+    soundPause.volume = 1;
+    soundPowerUp.volume = 1;
+    soundFlag = true;
+}
 
 var width = window.innerWidth,
     height = window.innerHeight;
@@ -64,6 +99,9 @@ window.onload = function () {
             fontsReady = true;
             changeWorld(0);
             StartMenu();
+            for (var i = 0; i < numberOfClouds; i++) {
+                clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height*2/3 - cloudHeight)));
+            }
         }
     };
     (function () {
@@ -124,6 +162,8 @@ function stats () {
     ctx.fillStyle = "#ffffff";
     ctx.textBaseline = "top"
     ctx.textAlign = "left";
+    ctx.shadowOffsetX = 2; 
+    ctx.shadowOffsetY = 2; 
     ctx.fillText("HIGH:", 10, 10);
     ctx.fillText(high, 10, 27);
     ctx.textAlign = "center";
@@ -133,6 +173,8 @@ function stats () {
     ctx.drawImage(smallCoin, width - 30 - smallCoinWidth, 9, smallCoinWidth, smallCoinHeight);
     ctx.fillText("X", width - 10, 10);
     ctx.fillText(sumOfCoins, width - 10, 28);
+    ctx.shadowOffsetX = 0; 
+    ctx.shadowOffsetY = 0; 
 }
 
 var player = new(function () {
@@ -700,12 +742,18 @@ function Die () {
             ctx.textAlign = "center";
             ctx.textBaseline = "center"
             ctx.fillStyle = "#ffffff";
+            ctx.shadowOffsetX = 2; 
+            ctx.shadowOffsetY = 2; 
             if (win) ctx.fillText("NEW HIGH SCORE!", width / 2, height / 2);
             ctx.fillText("GAME OVER", width / 2, height / 2 - 60);
             ctx.fillText("YOUR RESULT:" + points, width / 2, height / 2 - 30);
-            changeWorld(0);
+            ctx.shadowOffsetX = 0; 
+            ctx.shadowOffsetY = 0; 
         }, 100);
-
+        changeWorld(0);
+        for (var i = 0; i < numberOfClouds; i++) {
+            clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height*2/3 - cloudHeight)));
+        }
 }
 
 function GameOver () {
@@ -722,9 +770,12 @@ function GameOver () {
         ctx.textAlign = "center";
             ctx.textBaseline = "center"
             ctx.fillStyle = "#ffffff";
+        ctx.shadowOffsetX = 2; 
+        ctx.shadowOffsetY = 2; 
         ctx.fillText("CONTINUE FOR  100?", width / 2, height / 4);
         ctx.drawImage(smallCoin, width / 2 + 55, height/(4), smallCoinWidth, smallCoinHeight);
-        
+        ctx.shadowOffsetX = 0; 
+        ctx.shadowOffsetY = 0; 
 
         
         ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75), menubuttonsWidth, menubuttonsHeight/2);
@@ -809,8 +860,10 @@ document.onmousemove = function (e) {
     } else if (state == 2) {
         if (e.pageY - canvas.offsetTop > height / (2.75) && e.pageY - canvas.offsetTop < (height/2.75) + 80)
             { select = 0; }
-        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140 && !mobile)
+        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX < width/2 && !mobile)
             { select = 1; }
+        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX > width/2 && !mobile)
+            { select = 4; }
     } else if (state == 3) {
         if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140)
             { select = 2; }
@@ -826,8 +879,10 @@ if (mobile) {
     } else if (state == 2) {
         if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 80)
             { select = 0; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140)
+        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX < width/2)
             { select = 1; }
+        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX > width/2)
+            { select = 4; }
     } else if (state == 3) {
         if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140)
             { select = 2; }
@@ -890,10 +945,25 @@ document.onmousedown = function (e) {
             player.Y = height / 4;
             player.fallStop();
             generateObjects();
-        } else {
-            window.close();
+            state = true;
         }
-        state = true;
+        if (select == 1) {
+            if (soundJump.volume > 0.5) {
+                soundOff();
+            }
+            else if (soundJump.volume < 0.5) {
+                soundOn();
+            }
+        }
+        if (select == 4) {
+            if (music.volume > 0.5) {
+                musicOff();
+            }
+            else if (music.volume < 0.5) {
+                musicOn();
+            }
+        }
+        
     } else if (state == 3) {
         if (select == 3) {
             player.X = width / 2;
@@ -988,7 +1058,6 @@ if (mobile) {
 function GameLoop () {
     if (pause == false) {
         clear();
-
         clouds.forEach(function (cloud, index) {
             if (cloud.isMoving == 1) {
                 if (cloud.X > width + cloudWidth) {
@@ -997,6 +1066,7 @@ function GameLoop () {
                 cloud.X += cloud.direction / 2;
 
             }
+
             cloud.draw();
         });
 
@@ -1056,14 +1126,31 @@ function GameLoop () {
             requestAnimationFrame(GameLoop);
         else if (state == 2) StartMenu();
     } else {
+        ctx.shadowOffsetX = 2; 
+        ctx.shadowOffsetY = 2; 
         ctx.textBaseline = "center";
         ctx.textAlign = "center";
         ctx.fillText("Pause", width / 2, height / 2);
+        ctx.shadowOffsetX = 0; 
+        ctx.shadowOffsetY = 0; 
     }
 }
 
 function StartMenu () {
     clear();
+    clouds.forEach(function (cloud, index) {
+            if (cloud.isMoving == 1) {
+                if (cloud.X > width + cloudWidth) {
+                    cloud.X = 0 - cloudWidth;
+                }
+                if (index%2 == 0) {
+                    cloud.X += cloud.direction / 2;
+                } else {
+                    cloud.X += cloud.direction / 3;
+                }
+            }
+            cloud.draw();
+    });
 
     var ground = new Image(),
         groundHeight = 96;
@@ -1121,27 +1208,55 @@ function StartMenu () {
         ctx.fillStyle = "#ffffff";
         ctx.textBaseline = "top";
         ctx.textAlign = "center";
+        ctx.shadowColor = "black";
+        ctx.shadowOffsetX = 2; 
+        ctx.shadowOffsetY = 2; 
+        ctx.shadowBlur = 0;
+        ctx.fillText('\u00A9' + " yoursgk", width / 2, height - groundHeight*2);
+        ctx.shadowOffsetX = 0; 
+        ctx.shadowOffsetY = 0; 
         
         var menubuttons = new Image(),
             menubuttonsWidth = 180,
             menubuttonsHeight = 120;
         menubuttons.src = imageMenuButtons;
+
+        var soundbuttons = new Image(),
+            soundbuttonsWidth = 80,
+            soundbuttonsHeight = 120;
+        soundbuttons.src = "img/soundbuttons2.png";
         
         ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75), menubuttonsWidth, menubuttonsHeight/2);
 
-        if (!mobile) {
-            ctx.drawImage(menubuttons, 0, menubuttonsHeight/2, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75) + menubuttonsHeight/2 + 20, menubuttonsWidth, menubuttonsHeight/2);
+        ctx.drawImage(soundbuttons, 0, 0, soundbuttonsWidth, soundbuttonsHeight/2, width/2 - soundbuttonsWidth + menubuttonsWidth/2, height/(2.75) + soundbuttonsHeight/2 + 20, soundbuttonsWidth, soundbuttonsHeight/2);
+
+        ctx.drawImage(soundbuttons, 0, soundbuttonsHeight/2, soundbuttonsWidth, soundbuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75) + soundbuttonsHeight/2 + 20, soundbuttonsWidth, soundbuttonsHeight/2);
+
+        if (soundFlag == false) {
+            ctx.font = '30px "Press Start 2P"';
+            ctx.fillStyle = "red";
+            ctx.textBaseline = "center";
+            ctx.textAlign = "center";
+            ctx.fillText("X", width / 2 - soundbuttonsWidth/2 - 8, height/(2.75) + soundbuttonsHeight/2 + 38);
+            ctx.shadowOffsetX = 0; 
+            ctx.shadowOffsetY = 0; 
+        } 
+        if (musicFlag == false) {
+            ctx.font = '30px "Press Start 2P"';
+            ctx.fillStyle = "red";
+            ctx.textBaseline = "center";
+            ctx.textAlign = "center";
+            ctx.fillText("X", width / 2 + soundbuttonsWidth/2 + 12, height/(2.75) + soundbuttonsHeight/2 + 38);
+            ctx.shadowOffsetX = 0; 
+            ctx.shadowOffsetY = 0; 
         }
+        ctx.font = '14px "Press Start 2P"';
+        if (mobile) {
+            ctx.font = '12px "Press Start 2P"';
+        }
+
     }
-    
-    if (select == 0) {
-        ctx.drawImage(smallCoin, width / 2 - 60, height/(2.75) + menubuttonsHeight/4 - smallCoinHeight/2, smallCoinWidth, smallCoinHeight);
-    } else if (select == 1){
-        ctx.drawImage(smallCoin, width / 2 - 60, height / (2.75) + menubuttonsHeight - 20 + smallCoinHeight/4, smallCoinWidth, smallCoinHeight); 
-    }
-    
     if (state == 2)
-        //requestAnimationFrame(StartMenu);
         requestAnimFrame(StartMenu);
     else {
         clearTimeout();
