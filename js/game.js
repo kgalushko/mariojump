@@ -6,15 +6,43 @@ var points = 0, // Количество очков
     state = 2, // Состояние - 2 - Меню
     select = 0,
     win = false,
-    sumOfCoins = 0, // Количество монет
-    soundJump = new Audio("sound/jump-small.mp3"),
-    soundJumpSuper = new Audio("sound/jump-super.mp3"),
-    soundCoin = new Audio("sound/coin.mp3"),
-    soundDie = new Audio("sound/die.mp3"),
-    soundPause = new Audio("sound/pause.mp3"),
-    soundPowerUp = new Audio("sound/powerup.mp3"),
-    music = new Audio("sound/music.mp3"),
-    musicUnderground = new Audio("sound/underground.mp3");
+    sumOfCoins = 0; // Количество монет
+    // soundJump = new Audio("sound/jump-small.mp3"),
+    // soundJumpSuper = new Audio("sound/jump-super.mp3"),
+    // soundCoin = new Audio("sound/coin.mp3"),
+    // soundDie = new Audio("sound/die.mp3"),
+    // soundPause = new Audio("sound/pause.mp3"),
+    // soundPowerUp = new Audio("sound/powerup.mp3"),
+    // music = new Audio("sound/music.mp3"),
+    // musicUnderground = new Audio("sound/underground.mp3");
+
+var soundJump = new Howl({
+  src: ['sound/jump-small.mp3'],
+});
+var soundJumpSuper = new Howl({
+  src: ['sound/jump-super.mp3'],
+});
+var soundCoin = new Howl({
+  src: ['sound/coin.mp3'],
+  volume: 0.5,
+});
+var soundDie = new Howl({
+  src: ['sound/die.mp3'],
+});
+var soundPause = new Howl({
+  src: ['sound/pause.mp3'],
+});
+var soundPowerUp = new Howl({
+  src: ['sound/powerup.mp3'],
+});
+var music = new Howl({
+  src: ['sound/music.mp3'],
+  loop: true,
+});
+var musicUnderground = new Howl({
+  src: ['sound/underground.mp3'],
+  loop: true,
+});
 
 var mobile;
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
@@ -33,40 +61,39 @@ window.requestAnimFrame = (function() {
 })();
 
 changeWorld(0);
-soundJump.volume = 0.7;
 
 var soundFlag = true;
 var musicFlag = true;
 
 function musicOff() {
-    music.volume = 0;
-    musicUnderground.volume = 0;
+    music.volume(0);
+    musicUnderground.volume (0);
     musicFlag = false;
 }
 
 function musicOn() {
-    music.volume = 1;
-    musicUnderground.volume = 1;
+    music.volume(1);
+    musicUnderground.volume(1);
     musicFlag = true;
 }
 
 function soundOff() {
-    soundJump.volume = 0;
-    soundJumpSuper.volume = 0;
-    soundCoin.volume = 0;
-    soundDie.volume = 0;
-    soundPause.volume = 0;
-    soundPowerUp.volume = 0;
+    soundJump.volume(0);
+    soundJumpSuper.volume(0);
+    soundCoin.volume(0);
+    soundDie.volume(0);
+    soundPause.volume(0);
+    soundPowerUp.volume(0);
     soundFlag = false;
 }
 
 function soundOn() {
-    soundJump.volume = 1;
-    soundJumpSuper.volume = 1;
-    soundCoin.volume = 1;
-    soundDie.volume = 1;
-    soundPause.volume = 1;
-    soundPowerUp.volume = 1;
+    soundJump.volume(1);
+    soundJumpSuper.volume(1);
+    soundCoin.volume(1);
+    soundDie.volume(1);
+    soundPause.volume(1);
+    soundPowerUp.volume(1);
     soundFlag = true;
 }
 
@@ -493,12 +520,11 @@ function Coin (x, y) {
     }
 
     this.onCollide = function () {
-        //player.fallStop();
         if (this.empty == false) {
             this.empty = true;
             sumOfCoins++;
             points +=10;
-            //soundCoin.play();
+            soundCoin.play();
         }
         this.checkEmpty();
     }
@@ -728,8 +754,8 @@ function checkCollision () {
 function Die () {
     state = false;
     soundDie.play();
-        music.pause();
-        musicUnderground.pause();
+        music.stop();
+        musicUnderground.stop();
         if (points == high) {
             win = true;
         }
@@ -874,14 +900,13 @@ document.onmousemove = function (e) {
 
 if (mobile) {
     document.addEventListener("touchstart", function (e) {
-    e.preventDefault();
     if (state == 1) {
     } else if (state == 2) {
         if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 80)
             { select = 0; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX < width/2)
+        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.changedTouches[0].pageX < width/2)
             { select = 1; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX > width/2)
+        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.changedTouches[0].pageX > width/2)
             { select = 4; }
     } else if (state == 3) {
         if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140)
@@ -889,7 +914,9 @@ if (mobile) {
         if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 80)
             { select = 3; }
     }
-    if (state == false) {
+    });
+    document.addEventListener("touchend", function(e) {
+        if (state == false) {
         points = 0;
         state = 2;
         win = false;
@@ -907,10 +934,24 @@ if (mobile) {
             player.Y = height / 4;
             player.fallStop();
             generateObjects();
-        } else {
-            window.close();
+            state = true;
+        } 
+        if (select == 1) {
+            if (soundFlag == true) {
+                soundOff();
+            }
+            else if (soundFlag == false) {
+                soundOn();
+            }
         }
-        state = true;
+        if (select == 4) {
+            if (musicFlag == true) {
+                musicOff();
+            }
+            else if (musicFlag == false) {
+                musicOn();
+            }
+        }
     } else if (state == 3) {
         if (select == 3) {
             player.X = width / 2;
@@ -924,9 +965,8 @@ if (mobile) {
         }
     }
     });
-}
-
-document.onmousedown = function (e) {
+} else {
+    document.onmousedown = function (e) {
     if (state == false) {
         points = 0;
         state = 2;
@@ -948,18 +988,18 @@ document.onmousedown = function (e) {
             state = true;
         }
         if (select == 1) {
-            if (soundJump.volume > 0.5) {
+            if (soundFlag == true) {
                 soundOff();
             }
-            else if (soundJump.volume < 0.5) {
+            else if (soundFlag == false) {
                 soundOn();
             }
         }
         if (select == 4) {
-            if (music.volume > 0.5) {
+            if (musicFlag == true) {
                 musicOff();
             }
-            else if (music.volume < 0.5) {
+            else if (musicFlag == false) {
                 musicOn();
             }
         }
@@ -977,6 +1017,9 @@ document.onmousedown = function (e) {
         }
     }
 }
+}
+
+
 document.addEventListener("keydown", function (e) {
     if (e.keyCode == 32 || e.keyCode == 27) {
         Pause();
