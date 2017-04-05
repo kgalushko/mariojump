@@ -7,67 +7,74 @@ var points = 0, // Количество очков
     select = 0,
     win = false,
     sumOfCoins = 0; // Количество монет
-    // soundJump = new Audio("sound/jump-small.mp3"),
-    // soundJumpSuper = new Audio("sound/jump-super.mp3"),
-    // soundCoin = new Audio("sound/coin.mp3"),
-    // soundDie = new Audio("sound/die.mp3"),
-    // soundPause = new Audio("sound/pause.mp3"),
-    // soundPowerUp = new Audio("sound/powerup.mp3"),
-    // music = new Audio("sound/music.mp3"),
-    // musicUnderground = new Audio("sound/underground.mp3");
 
 var soundJump = new Howl({
-  src: ['sound/jump-small.mp3'],
+    src: ['sound/jump-small.mp3'],
 });
 var soundJumpSuper = new Howl({
-  src: ['sound/jump-super.mp3'],
+    src: ['sound/jump-super.mp3'],
+});
+var soundKick = new Howl({
+    src: ['sound/kick.mp3'],
+});
+var soundSelect = new Howl({
+    src: ['sound/select.mp3'],
 });
 var soundCoin = new Howl({
-  src: ['sound/coin.mp3'],
-  volume: 0.5,
+    src: ['sound/coin.mp3'],
+    volume: 0.2,
 });
 var soundDie = new Howl({
-  src: ['sound/die.mp3'],
+    src: ['sound/die.mp3'],
 });
 var soundPause = new Howl({
-  src: ['sound/pause.mp3'],
+    src: ['sound/pause.mp3'],
 });
 var soundPowerUp = new Howl({
-  src: ['sound/powerup.mp3'],
+    src: ['sound/powerup.mp3'],
+});
+var soundPowerDown = new Howl({
+    src: ['sound/warp.wav'],
 });
 var music = new Howl({
-  src: ['sound/music.mp3'],
-  loop: true,
+    src: ['sound/music.mp3'],
+    loop: true,
 });
 var musicUnderground = new Howl({
-  src: ['sound/underground.mp3'],
-  loop: true,
+    src: ['sound/underground.mp3'],
+    loop: true,
 });
 
 var mobile;
 if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
     mobile = true;
 }
+var native;
+if (/Mario/i.test(navigator.userAgent)) {
+    native = true;
+}
 
 window.requestAnimFrame = (function() {
-    return  window.requestAnimationFrame   || 
-        window.webkitRequestAnimationFrame || 
-        window.mozRequestAnimationFrame    || 
-        window.oRequestAnimationFrame      || 
-        window.msRequestAnimationFrame     || 
-        function(/* function */ callback, /* DOMElement */ element){
-             window.setTimeout(callback, 1000 / 60);
+    return window.requestAnimationFrame ||
+        window.webkitRequestAnimationFrame ||
+        window.mozRequestAnimationFrame ||
+        window.oRequestAnimationFrame ||
+        window.msRequestAnimationFrame ||
+        function( /* function */ callback, /* DOMElement */ element) {
+            window.setTimeout(callback, 1000 / 60);
         };
 })();
 
 changeWorld(0);
+soundJump.volume(0.5);
+soundJumpSuper.volume(0.5);
 
 var soundFlag = true;
 var musicFlag = true;
 
 function musicOff() {
     music.volume(0);
-    musicUnderground.volume (0);
+    musicUnderground.volume(0);
     musicFlag = false;
 }
 
@@ -84,28 +91,48 @@ function soundOff() {
     soundDie.volume(0);
     soundPause.volume(0);
     soundPowerUp.volume(0);
+    soundPowerDown.volume(0);
+    soundKick.volume(0);
+    soundSelect.volume(0);
     soundFlag = false;
 }
 
 function soundOn() {
-    soundJump.volume(1);
-    soundJumpSuper.volume(1);
-    soundCoin.volume(1);
+    soundJump.volume(0.5);
+    soundJumpSuper.volume(0.5);
+    soundCoin.volume(0.3);
     soundDie.volume(1);
     soundPause.volume(1);
     soundPowerUp.volume(1);
+    soundPowerDown.volume(1);
+    soundKick.volume(1);
+    soundSelect.volume(1);
     soundFlag = true;
 }
+
+function fadeOut() {
+    var j = 0;
+    var interval = setInterval(function() {
+        ctx.fillStyle = 'rgba(0,0,0,' + j + ')';
+        j += 0.05;
+        ctx.fillRect(0, 0, width, height);
+        if (j > 1) {
+            clearInterval(interval);
+        }
+    }, 40);
+}
+
+function fadeIn() {}
 
 var width = window.innerWidth,
     height = window.innerHeight;
 
-window.onresize = function () {
+window.onresize = function() {
     width = window.innerWidth,
-    height = window.innerHeight;
+        height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
-}   
+}
 
 canvas.width = width;
 canvas.height = height;
@@ -116,58 +143,61 @@ var smallCoin = new Image(),
 smallCoin.src = imageSmallCoin;
 
 //Начало - загрузка шрифта
-window.onload = function () {
-    WebFontConfig = {
-        custom: {
-            families: ['Press Start 2P'],
-            urls: ['fonts.css']
-        },
-        active: function () {
-            fontsReady = true;
-            changeWorld(0);
-            StartMenu();
-            for (var i = 0; i < numberOfClouds; i++) {
-                clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height*2/3 - cloudHeight)));
+window.onload = function() {
+        WebFontConfig = {
+            custom: {
+                families: ['Press Start 2P'],
+                urls: ['fonts.css']
+            },
+            active: function() {
+                fontsReady = true;
+                changeWorld(0);
+                StartMenu();
+                for (var i = 0; i < numberOfClouds; i++) {
+                    clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height * 2 / 3 - cloudHeight)));
+                }
+            }
+        };
+        (function() {
+            var wf = document.createElement('script');
+            wf.type = 'text/javascript';
+            wf.src = 'js/webfontloader.js';
+            wf.async = 'true';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(wf, s);
+        })();
+        if (native) {
+            if (localStorage.getItem('highPoint')) {
+                high = localStorage.getItem('highPoint');
+            }
+            if (localStorage.getItem('sumOfCoins')) {
+                sumOfCoins = localStorage.getItem('sumOfCoins');
             }
         }
-    };
-    (function () {
-        var wf = document.createElement('script');
-        wf.type = 'text/javascript';
-        wf.src = 'js/webfontloader.js';
-        wf.async = 'true';
-        var s = document.getElementsByTagName('script')[0];
-        s.parentNode.insertBefore(wf, s);
-    })();
-    // if (localStorage.getItem('highPoint')) {
-    //     high = localStorage.getItem('highPoint');
-    // }
-    
-}
-//Конец - загрузка шрифта
+    }
+    //Конец - загрузка шрифта
 
 // Начало - Полифилл для поддержки requestAnimationFrame
 (function() {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] 
-        || window[vendors[x]+'CancelRequestAnimationFrame'];
+    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+        window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
     }
     if (!window.requestAnimationFrame)
         window.requestAnimationFrame = function(callback, element) {
-        var currTime = new Date().getTime();
-        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-        var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
-        timeToCall);
-        lastTime = currTime + timeToCall;
-        return id;
-    };
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
+                timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
     if (!window.cancelAnimationFrame)
         window.cancelAnimationFrame = function(id) {
-        clearTimeout(id);
-    };
+            clearTimeout(id);
+        };
 }());
 // Конец - Полифилл для поддержки requestAnimationFrame
 
@@ -181,7 +211,7 @@ function clear() {
 }
 
 // Вывод статистики
-function stats () {
+function stats() {
     this.image = new Image();
     this.image.src = imageStats;
     ctx.fillStyle = ctx.createPattern(this.image, "repeat");
@@ -189,8 +219,8 @@ function stats () {
     ctx.fillStyle = "#ffffff";
     ctx.textBaseline = "top"
     ctx.textAlign = "left";
-    ctx.shadowOffsetX = 2; 
-    ctx.shadowOffsetY = 2; 
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
     ctx.fillText("HIGH:", 10, 10);
     ctx.fillText(high, 10, 27);
     ctx.textAlign = "center";
@@ -200,11 +230,11 @@ function stats () {
     ctx.drawImage(smallCoin, width - 30 - smallCoinWidth, 9, smallCoinWidth, smallCoinHeight);
     ctx.fillText("X", width - 10, 10);
     ctx.fillText(sumOfCoins, width - 10, 28);
-    ctx.shadowOffsetX = 0; 
-    ctx.shadowOffsetY = 0; 
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
 }
 
-var player = new(function () {
+var player = new(function() {
     var that = this;
 
     this.image = new Image();
@@ -229,7 +259,7 @@ var player = new(function () {
     this.super = false;
 
 
-    this.checkSuper = function () {
+    this.checkSuper = function() {
         if (this.super == true) {
             this.image.src = imageSuper;
             this.width = 32;
@@ -245,12 +275,12 @@ var player = new(function () {
 
     this.isMoving = true;
 
-    this.setPosition = function (x, y) {
+    this.setPosition = function(x, y) {
         this.X = x;
         this.Y = y;
     }
 
-    this.jump = function () {
+    this.jump = function() {
         if (!this.isJumping && !this.isFalling) {
             this.fallSpeed = 0;
             this.isJumping = true;
@@ -264,7 +294,7 @@ var player = new(function () {
         }
     }
 
-    this.checkJump = function () {
+    this.checkJump = function() {
         if (this.Y > height * 0.25) {
             this.setPosition(this.X, this.Y - this.jumpSpeed);
         } else {
@@ -273,33 +303,33 @@ var player = new(function () {
             }
             if (points > high) {
                 high = points;
-                //localStorage.setItem('highPoint', high);
+                if (native) localStorage.setItem('highPoint', high);
             }
 
             var rand = Math.random() * (width - platformWidth);
 
-            clouds.forEach(function (cloud, index) {
+            clouds.forEach(function(cloud, index) {
                 cloud.Y += that.jumpSpeed / 5;
                 if (cloud.Y > height) {
                     clouds[index] = new Cloud(Math.random() * (width - cloudWidth), Math.random() * (height - cloudHeight) - height - cloudHeight);
                 }
             });
 
-            birds.forEach(function (bird, index) {
+            birds.forEach(function(bird, index) {
                 bird.Y += that.jumpSpeed;
                 if (bird.Y > height) {
-                    birds[index] = new Bird(Math.random() * (width - birdWidth), bird.Y - 4*height);
+                    birds[index] = new Bird(Math.random() * (width - birdWidth), bird.Y - 4 * height);
                 }
             });
 
-            flowers.forEach(function (flower, index) {
+            flowers.forEach(function(flower, index) {
                 flower.Y += that.jumpSpeed;
                 if (flower.Y > height) {
                     flowers[index] = new Flower(platforms[0].X, flower.Y - 4 * height - 4 * platformHeight);
                 }
             });
 
-            platforms.forEach(function (platform, index) {
+            platforms.forEach(function(platform, index) {
                 platform.Y += that.jumpSpeed;
                 coins[index].Y += that.jumpSpeed;
 
@@ -311,7 +341,7 @@ var player = new(function () {
                 }
             });
 
-            mushrooms.forEach(function (mushroom, index) {
+            mushrooms.forEach(function(mushroom, index) {
                 mushroom.Y += that.jumpSpeed;
                 if (mushroom.Y > height) {
                     mushrooms[index] = new Mushroom(~~(Math.random() * (width - mushroomWidth)), mushroom.Y - (height * (Math.floor((points + 100) / 50))) - mushroomHeight);
@@ -331,34 +361,34 @@ var player = new(function () {
         }
     }
 
-    this.checkFall = function () {
+    this.checkFall = function() {
         if (this.Y < height - this.height) {
             this.setPosition(this.X, this.Y + this.fallSpeed);
             this.fallSpeed++;
         } else {
             if (points == 0) that.fallStop();
-                GameOver();
+            GameOver();
         }
     }
 
-    this.fallStop = function () {
+    this.fallStop = function() {
         this.isFalling = false;
         this.fallSpeed = 0;
         this.jump();
     }
 
-    this.moveLeft = function (theX) {
+    this.moveLeft = function(theX) {
         if ((that.X > 0) && that.isMoving) {
-            if (mobile){
+            if (mobile) {
                 that.setPosition(this.X + theX, that.Y);
             } else {
                 that.setPosition(theX - that.width / 2, that.Y);
             }
-            
+
         }
     }
 
-    this.moveRight = function (theX) {
+    this.moveRight = function(theX) {
         if ((that.X + that.width < width) && that.isMoving) {
             if (mobile) {
                 that.setPosition(this.X + theX, that.Y);
@@ -368,14 +398,14 @@ var player = new(function () {
         }
     }
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(that.image, this.frame * this.width, 0, that.width, that.height,
                 that.X, that.Y, that.width, that.height);
         } catch (e) {}
     }
 
-    this.update = function () {
+    this.update = function() {
         if (this.isJumping) {
             this.frame = 0;
             this.checkJump();
@@ -391,7 +421,7 @@ var player = new(function () {
 })();
 
 
-function Cloud (x, y) {
+function Cloud(x, y) {
     this.image = new Image();
     this.image.src = imageCloud;
 
@@ -401,7 +431,7 @@ function Cloud (x, y) {
     this.isMoving = 1;
     this.direction = 1;
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, 0, 0, this.width, this.height, this.X, this.Y, this.width, this.height);
         } catch (e) {}
@@ -413,21 +443,21 @@ function Cloud (x, y) {
     return this;
 }
 
-function Platform (x, y) {
+function Platform(x, y) {
     this.image = new Image();
     this.image.src = imagePlatform;
 
     this.width = 96;
     this.height = 32;
 
-    this.onCollide = function () {
+    this.onCollide = function() {
         player.fallStop();
     }
 
     this.isMoving = ~~(Math.random() * 2); //~~ Округляет число
     this.direction = ~~(Math.random() * 2) ? -1 : 1;
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, 0, 0, this.width, this.height, this.X, this.Y, this.width, this.height);
         } catch (e) {}
@@ -439,7 +469,7 @@ function Platform (x, y) {
     return this;
 }
 
-function Mushroom (x, y) {
+function Mushroom(x, y) {
 
     this.image = new Image();
     this.image.src = imageMushroom;
@@ -454,7 +484,7 @@ function Mushroom (x, y) {
     this.speedFrame = 15;
     this.speedTemp = 0;
 
-    this.checkEmpty = function () {
+    this.checkEmpty = function() {
         if (this.empty == false) {
             this.image.src = imageMushroom;
         } else {
@@ -462,26 +492,27 @@ function Mushroom (x, y) {
         }
     }
 
-    this.onCollide = function () {
+    this.onCollide = function() {
         player.fallStop();
         if (this.empty == false) {
             this.empty = true;
             player.super = true;
             soundPowerUp.play();
-            setTimeout(function () {
+            setTimeout(function() {
                 player.super = false;
+                soundPowerDown.play();
             }, player.superDuration);
         }
         this.checkEmpty();
     }
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, this.frame * this.width / this.numberOfFrames, 0, this.width / this.numberOfFrames, this.height, this.X, this.Y, this.width / this.numberOfFrames, this.height);
         } catch (e) {}
     }
 
-    this.update = function () {
+    this.update = function() {
         if (this.frame > this.numberOfFrames - 1) this.frame = 0
         this.draw();
         this.speedTemp += 1;
@@ -497,7 +528,7 @@ function Mushroom (x, y) {
     return this;
 }
 
-function Coin (x, y) {
+function Coin(x, y) {
     this.image = new Image();
     this.image.src = imageCoin;
 
@@ -511,7 +542,7 @@ function Coin (x, y) {
     this.speedFrame = 5;
     this.speedTemp = 0;
 
-    this.checkEmpty = function () {
+    this.checkEmpty = function() {
         if (this.empty == false) {
             this.image.src = imageCoin;
         } else {
@@ -519,23 +550,23 @@ function Coin (x, y) {
         }
     }
 
-    this.onCollide = function () {
+    this.onCollide = function() {
         if (this.empty == false) {
             this.empty = true;
             sumOfCoins++;
-            points +=10;
+            points += 10;
             soundCoin.play();
         }
         this.checkEmpty();
     }
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, this.frame * this.width / this.numberOfFrames, 0, this.width / this.numberOfFrames, this.height, this.X, this.Y, this.width / this.numberOfFrames, this.height);
         } catch (e) {}
     }
 
-    this.update = function () {
+    this.update = function() {
         if (this.frame > this.numberOfFrames - 1) this.frame = 0
         this.draw();
         this.speedTemp += 1;
@@ -551,7 +582,7 @@ function Coin (x, y) {
     return this;
 }
 
-function Flower (x, y) {
+function Flower(x, y) {
     this.image = new Image();
     this.image.src = imageFlower;
 
@@ -563,26 +594,25 @@ function Flower (x, y) {
     this.speedFrame = 10;
     this.speedTemp = 0;
 
-    this.onCollide = function () {
-        //this.frame = 1;
+    this.onCollide = function() {
         if (player.super == false) {
             GameOver();
-        }
-        else {
-            setTimeout(function () {
+        } else {
+            setTimeout(function() {
                 player.super = false;
+                soundPowerDown.play();
             }, 100);
             player.jump();
         }
     }
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, this.frame * this.width / this.numberOfFrames, 0, this.width / this.numberOfFrames, this.height, this.X, this.Y, this.width / this.numberOfFrames, this.height);
         } catch (e) {}
     }
 
-    this.update = function () {
+    this.update = function() {
         if (this.frame > this.numberOfFrames - 1) this.frame = 0
         this.draw();
         this.speedTemp += 1;
@@ -598,7 +628,7 @@ function Flower (x, y) {
     return this;
 }
 
-function Bird (x, y) {
+function Bird(x, y) {
     this.image = new Image();
     this.image.src = imageBird;
 
@@ -611,28 +641,28 @@ function Bird (x, y) {
     this.speedTemp = 0;
 
     this.Temp = 0,
-    this.Up = true,
-    this.Down = false;
+        this.Up = true,
+        this.Down = false;
 
-    this.onCollide = function () {
+    this.onCollide = function() {
         if (player.super == false) {
             GameOver();
-        }
-        else {
-            setTimeout(function () {
+        } else {
+            setTimeout(function() {
                 player.super = false;
+                soundPowerDown.play();
             }, 100);
             player.jump();
         }
     }
 
-    this.draw = function () {
+    this.draw = function() {
         try {
             ctx.drawImage(this.image, this.frame * this.width / this.numberOfFrames, 0, this.width / this.numberOfFrames, this.height, this.X, this.Y, this.width / this.numberOfFrames, this.height);
         } catch (e) {}
     }
 
-    this.update = function () {
+    this.update = function() {
         if (this.frame > this.numberOfFrames - 1) this.frame = 0
         this.draw();
         this.speedTemp += 1;
@@ -663,7 +693,7 @@ var numberOfPlatforms = 6,
     coins = [],
     coinWidth = 20,
     coinHeight = 28;
-    numberOfFlower = 1,
+numberOfFlower = 1,
     flowers = [],
     flowerWidth = 32,
     flowerHeight = 48,
@@ -675,7 +705,7 @@ var numberOfPlatforms = 6,
 
 
 // Создание объектов
-function generateObjects () {
+function generateObjects() {
     var position = 0;
     var mushroomPosition = ~~(height / numberOfMushroom);
 
@@ -697,13 +727,13 @@ function generateObjects () {
         flowers[i] = new Flower((Math.random() * (width - flowerWidth)), platforms[0].Y - flowerHeight);
     }
     for (var i = 0; i < numberOfBirds; i++) {
-        birds[i] = new Bird((Math.random() * (width - flowerWidth)), -4*height);
+        birds[i] = new Bird((Math.random() * (width - flowerWidth)), -4 * height);
     }
 }
 
 // Проверка на столкновения
-function checkCollision () {
-    platforms.forEach(function (e, index) {
+function checkCollision() {
+    platforms.forEach(function(e, index) {
         if ((player.isFalling) &&
             (player.X < e.X + platformWidth) &&
             (player.X + player.width > e.X) &&
@@ -713,7 +743,7 @@ function checkCollision () {
             e.onCollide();
         }
     });
-    mushrooms.forEach(function (e, index) {
+    mushrooms.forEach(function(e, index) {
         if ((player.X < e.X + mushroomWidth) &&
             (player.X + player.width > e.X) &&
             (player.Y + player.height > e.Y + (mushroomHeight) / 1.5) &&
@@ -722,7 +752,7 @@ function checkCollision () {
             e.onCollide();
         }
     });
-    coins.forEach(function (e, index) {
+    coins.forEach(function(e, index) {
         if ((player.X <= e.X + coinWidth) &&
             (player.X + player.width >= e.X) &&
             (player.Y + player.height >= e.Y - coinHeight) &&
@@ -731,7 +761,7 @@ function checkCollision () {
             e.onCollide();
         }
     });
-    flowers.forEach(function (e, index) {
+    flowers.forEach(function(e, index) {
         if ((player.isFalling) &&
             (player.X <= e.X + flowerWidth) &&
             (player.X + player.width >= e.X) &&
@@ -741,7 +771,7 @@ function checkCollision () {
             e.onCollide();
         }
     });
-    birds.forEach(function (e, index) {
+    birds.forEach(function(e, index) {
         if ((player.X <= e.X + birdWidth) &&
             (player.X + player.width >= e.X) &&
             (player.Y + player.height >= e.Y - birdHeight) &&
@@ -751,38 +781,40 @@ function checkCollision () {
         }
     });
 }
-function Die () {
+
+function Die() {
     state = false;
     soundDie.play();
-        music.stop();
-        musicUnderground.stop();
-        if (points == high) {
-            win = true;
-        }
-        for (var i = 0; i < platforms.length; i++) {
-            delete platforms[i];
-        }
-        player.super = false;
-        setTimeout(function () {
-            clear();
-            ctx.textAlign = "center";
-            ctx.textBaseline = "center"
-            ctx.fillStyle = "#ffffff";
-            ctx.shadowOffsetX = 2; 
-            ctx.shadowOffsetY = 2; 
-            if (win) ctx.fillText("NEW HIGH SCORE!", width / 2, height / 2);
-            ctx.fillText("GAME OVER", width / 2, height / 2 - 60);
-            ctx.fillText("YOUR RESULT:" + points, width / 2, height / 2 - 30);
-            ctx.shadowOffsetX = 0; 
-            ctx.shadowOffsetY = 0; 
-        }, 100);
-        changeWorld(0);
-        for (var i = 0; i < numberOfClouds; i++) {
-            clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height*2/3 - cloudHeight)));
-        }
+    music.stop();
+    musicUnderground.stop();
+    if (points == high) {
+        win = true;
+    }
+    for (var i = 0; i < platforms.length; i++) {
+        delete platforms[i];
+    }
+    if (native) localStorage.setItem('sumOfCoins', sumOfCoins);
+    player.super = false;
+    setTimeout(function() {
+        clear();
+        ctx.textAlign = "center";
+        ctx.textBaseline = "center"
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+        if (win) ctx.fillText("NEW HIGH SCORE!", width / 2, height / 2);
+        ctx.fillText("GAME OVER", width / 2, height / 2 - 60);
+        ctx.fillText("YOUR RESULT:" + points, width / 2, height / 2 - 30);
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+    }, 100);
+    changeWorld(0);
+    for (var i = 0; i < numberOfClouds; i++) {
+        clouds[i] = new Cloud((Math.random() * (width - cloudWidth)), (Math.random() * (height * 2 / 3 - cloudHeight)));
+    }
 }
 
-function GameOver () {
+function GameOver() {
     if (mobile) { navigator.vibrate(500); }
     if (sumOfCoins >= 100 && (state == true || state == 3)) {
         clear();
@@ -794,32 +826,31 @@ function GameOver () {
         menubuttons.src = imageMenuButtons;
 
         ctx.textAlign = "center";
-            ctx.textBaseline = "center"
-            ctx.fillStyle = "#ffffff";
-        ctx.shadowOffsetX = 2; 
-        ctx.shadowOffsetY = 2; 
+        ctx.textBaseline = "center"
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
         ctx.fillText("CONTINUE FOR  100?", width / 2, height / 4);
-        ctx.drawImage(smallCoin, width / 2 + 55, height/(4), smallCoinWidth, smallCoinHeight);
-        ctx.shadowOffsetX = 0; 
-        ctx.shadowOffsetY = 0; 
+        ctx.drawImage(smallCoin, width / 2 + 55, height / (4), smallCoinWidth, smallCoinHeight);
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
-        
-        ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75), menubuttonsWidth, menubuttonsHeight/2);
 
-        ctx.drawImage(menubuttons, 0, menubuttonsHeight/2, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75) + menubuttonsHeight/2 + 20, menubuttonsWidth, menubuttonsHeight/2);
+        ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight / 2, width / 2 - menubuttonsWidth / 2, height / (2.75), menubuttonsWidth, menubuttonsHeight / 2);
+
+        ctx.drawImage(menubuttons, 0, menubuttonsHeight / 2, menubuttonsWidth, menubuttonsHeight / 2, width / 2 - menubuttonsWidth / 2, height / (2.75) + menubuttonsHeight / 2 + 20, menubuttonsWidth, menubuttonsHeight / 2);
 
         if (select == 3) {
-        ctx.drawImage(smallCoin, width / 2 - 60, height/(2.75) + menubuttonsHeight/4 - smallCoinHeight/2, smallCoinWidth, smallCoinHeight);
-        } else if (select == 2){
-            ctx.drawImage(smallCoin, width / 2 - 60, height / (2.75) + menubuttonsHeight - 20 + smallCoinHeight/4, smallCoinWidth, smallCoinHeight); 
+            ctx.drawImage(smallCoin, width / 2 - 60, height / (2.75) + menubuttonsHeight / 4 - smallCoinHeight / 2, smallCoinWidth, smallCoinHeight);
+        } else if (select == 2) {
+            ctx.drawImage(smallCoin, width / 2 - 60, height / (2.75) + menubuttonsHeight - 20 + smallCoinHeight / 4, smallCoinWidth, smallCoinHeight);
         }
-    }
-    else {
+    } else {
         Die();
     }
 }
 
-function changeWorld (world) {
+function changeWorld(world) {
     switch (world) {
         case 1:
             imageHero = "img/hero2.png";
@@ -874,7 +905,7 @@ function changeWorld (world) {
     }
 }
 
-document.onmousemove = function (e) {
+document.onmousemove = function(e) {
     if (state == 1) {
         if (!mobile) {
             if (player.X + canvas.offsetLeft > e.pageX - 20) {
@@ -884,143 +915,134 @@ document.onmousemove = function (e) {
             }
         }
     } else if (state == 2) {
-        if (e.pageY - canvas.offsetTop > height / (2.75) && e.pageY - canvas.offsetTop < (height/2.75) + 80)
-            { select = 0; }
-        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX < width/2 && !mobile)
-            { select = 1; }
-        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140 && e.pageX > width/2 && !mobile)
-            { select = 4; }
+        if (e.pageY - canvas.offsetTop > height / (2.75) && e.pageY - canvas.offsetTop < (height / 2.75) + 80) { select = 0; }
+        if (e.pageY - canvas.offsetTop > height / 2.75 + 80 && e.pageY - canvas.offsetTop < (height / 2.75) + 140 && e.pageX < width / 2 && !mobile) { select = 1; }
+        if (e.pageY - canvas.offsetTop > height / 2.75 + 80 && e.pageY - canvas.offsetTop < (height / 2.75) + 140 && e.pageX > width / 2 && !mobile) { select = 4; }
     } else if (state == 3) {
-        if (e.pageY - canvas.offsetTop > height/2.75 + 80 && e.pageY - canvas.offsetTop < (height/2.75) + 140)
-            { select = 2; }
-        if (e.pageY - canvas.offsetTop > height / (2.75) && e.pageY - canvas.offsetTop < (height/2.75) + 80)
-            { select = 3; }
+        if (e.pageY - canvas.offsetTop > height / 2.75 + 80 && e.pageY - canvas.offsetTop < (height / 2.75) + 140) { select = 2; }
+        if (e.pageY - canvas.offsetTop > height / (2.75) && e.pageY - canvas.offsetTop < (height / 2.75) + 80) { select = 3; }
     }
 };
 
 if (mobile) {
-    document.addEventListener("touchstart", function (e) {
-    if (state == 1) {
-    } else if (state == 2) {
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 80)
-            { select = 0; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.changedTouches[0].pageX < width/2)
-            { select = 1; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140 && e.changedTouches[0].pageX > width/2)
-            { select = 4; }
-    } else if (state == 3) {
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height/2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 140)
-            { select = 2; }
-        if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height/2.75) + 80)
-            { select = 3; }
-    }
+    document.addEventListener("touchstart", function(e) {
+        if (state == 1) {} else if (state == 2) {
+            if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height / 2.75) + 80) { select = 0; }
+            if (e.changedTouches[0].pageY - canvas.offsetTop > height / 2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height / 2.75) + 140 && e.changedTouches[0].pageX < width / 2) { select = 1; }
+            if (e.changedTouches[0].pageY - canvas.offsetTop > height / 2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height / 2.75) + 140 && e.changedTouches[0].pageX > width / 2) { select = 4; }
+        } else if (state == 3) {
+            if (e.changedTouches[0].pageY - canvas.offsetTop > height / 2.75 + 80 && e.changedTouches[0].pageY - canvas.offsetTop < (height / 2.75) + 140) { select = 2; }
+            if (e.changedTouches[0].pageY - canvas.offsetTop > height / (2.75) && e.changedTouches[0].pageY - canvas.offsetTop < (height / 2.75) + 80) { select = 3; }
+        }
     });
     document.addEventListener("touchend", function(e) {
         if (state == false) {
-        points = 0;
-        state = 2;
-        win = false;
-        StartMenu();
-    } else if (state == 2) {
-        if (select == 0) {
-            
-            var world = ~~(Math.random() * 3);
-            changeWorld(world);
-            if (world == 1) musicUnderground.play();
-            else music.play();
-            
-            player.image.src = imageHero;
-            player.X = width / 2;
-            player.Y = height / 4;
-            player.fallStop();
-            generateObjects();
-            state = true;
-        } 
-        if (select == 1) {
-            if (soundFlag == true) {
-                soundOff();
+            points = 0;
+            state = 2;
+            win = false;
+            StartMenu();
+        } else if (state == 2) {
+            if (select == 0) {
+                setTimeout(function() {
+                    var world = ~~(Math.random() * 3);
+                    changeWorld(world);
+                    if (world == 1) musicUnderground.play();
+                    else music.play();
+                    player.image.src = imageHero;
+                    player.X = width / 2;
+                    player.Y = height / 4;
+                    player.fallStop();
+                    generateObjects();
+
+                }, 800);
+                state = true;
+                soundSelect.play();
             }
-            else if (soundFlag == false) {
-                soundOn();
+            if (select == 1) {
+                if (soundFlag == true) {
+                    soundOff();
+                } else if (soundFlag == false) {
+                    soundOn();
+                }
+            }
+            if (select == 4) {
+                if (musicFlag == true) {
+                    musicOff();
+                } else if (musicFlag == false) {
+                    musicOn();
+                }
+            }
+        } else if (state == 3) {
+            if (select == 3) {
+                player.X = width / 2;
+                player.Y = height / 4;
+                player.fallStop();
+                state = true;
+                soundSelect.play();
+                sumOfCoins -= 100;
+            }
+            if (select == 2) {
+                Die();
             }
         }
-        if (select == 4) {
-            if (musicFlag == true) {
-                musicOff();
-            }
-            else if (musicFlag == false) {
-                musicOn();
-            }
-        }
-    } else if (state == 3) {
-        if (select == 3) {
-            player.X = width / 2;
-            player.Y = height / 4;
-            player.fallStop();
-            state = true;
-            sumOfCoins -= 100;
-        }
-        if (select == 2) {
-            Die();
-        }
-    }
     });
 } else {
-    document.onmousedown = function (e) {
-    if (state == false) {
-        points = 0;
-        state = 2;
-        win = false;
-        StartMenu();
-    } else if (state == 2) {
-        if (select == 0) {
-            
-            var world = ~~(Math.random() * 3);
-            changeWorld(world);
-            if (world == 1) musicUnderground.play();
-            else music.play();
-            
-            player.image.src = imageHero;
-            player.X = width / 2;
-            player.Y = height / 4;
-            player.fallStop();
-            generateObjects();
-            state = true;
-        }
-        if (select == 1) {
-            if (soundFlag == true) {
-                soundOff();
+    document.onmousedown = function(e) {
+        if (state == false) {
+            points = 0;
+            state = 2;
+            win = false;
+            StartMenu();
+        } else if (state == 2) {
+            if (select == 0) {
+                setTimeout(function() {
+                    var world = ~~(Math.random() * 3);
+                    changeWorld(world);
+                    if (world == 1) musicUnderground.play();
+                    else music.play();
+                    player.image.src = imageHero;
+                    player.X = width / 2;
+                    player.Y = height / 4;
+                    player.fallStop();
+                    generateObjects();
+
+                }, 800);
+                state = true;
+                soundSelect.play();
             }
-            else if (soundFlag == false) {
-                soundOn();
+            if (select == 1) {
+                if (soundFlag == true) {
+                    soundOff();
+                } else if (soundFlag == false) {
+                    soundOn();
+                }
             }
-        }
-        if (select == 4) {
-            if (musicFlag == true) {
-                musicOff();
+            if (select == 4) {
+                if (musicFlag == true) {
+                    musicOff();
+                } else if (musicFlag == false) {
+                    musicOn();
+                }
             }
-            else if (musicFlag == false) {
-                musicOn();
+
+        } else if (state == 3) {
+            if (select == 3) {
+                player.X = width / 2;
+                player.Y = height / 4;
+                player.fallStop();
+                state = true;
+                soundSelect.play();
+                sumOfCoins -= 100;
             }
-        }
-        
-    } else if (state == 3) {
-        if (select == 3) {
-            player.X = width / 2;
-            player.Y = height / 4;
-            player.fallStop();
-            state = true;
-            sumOfCoins -= 100;
-        }
-        if (select == 2) {
-            Die();
+            if (select == 2) {
+                Die();
+            }
         }
     }
 }
-}
 
 
-document.addEventListener("keydown", function (e) {
+document.addEventListener("keydown", function(e) {
     if (e.keyCode == 32 || e.keyCode == 27) {
         Pause();
     }
@@ -1042,55 +1064,53 @@ var r = false;
 var speed = 18;
 
 if (mobile) {
-    document.addEventListener("touchstart", function (e) {
+    document.addEventListener("touchstart", function(e) {
         e.preventDefault();
-        if (e.changedTouches[0].pageX < width/2 && r == false) {
+        if (e.changedTouches[0].pageX < width / 2 && r == false) {
             l = true;
             clearInterval(SetRight);
             if (acc > 0) {
                 acc = 0;
             }
             if (acc == 0) {
-            SetLeft = setInterval(function () {
-                if (acc >= -acclimit) {
-                acc -= 2;
-                }
-                player.moveLeft(acc);
-            }, speed);
+                SetLeft = setInterval(function() {
+                    if (acc >= -acclimit) {
+                        acc -= 2;
+                    }
+                    player.moveLeft(acc);
+                }, speed);
             }
-        }
-        else if (e.changedTouches[0].pageX > width/2) {
+        } else if (e.changedTouches[0].pageX > width / 2) {
             clearInterval(stopLeft);
             clearInterval(SetRight);
             acc = 0;
         }
     });
-    document.addEventListener("touchend", function (e) {
-            l = false;
-            r = false;
-            clearInterval(SetLeft);
-            clearInterval(SetRight);
-            acc = 0;
+    document.addEventListener("touchend", function(e) {
+        l = false;
+        r = false;
+        clearInterval(SetLeft);
+        clearInterval(SetRight);
+        acc = 0;
     });
 
-    document.addEventListener("touchstart", function (e) {
+    document.addEventListener("touchstart", function(e) {
         e.preventDefault();
-        if (e.changedTouches[0].pageX > width/2 && l == false) {
+        if (e.changedTouches[0].pageX > width / 2 && l == false) {
             r = true;
             clearInterval(SetLeft);
             if (acc < 0) {
                 acc = 0;
             }
             if (acc == 0) {
-            SetRight = setInterval(function () {
-                if (acc <= acclimit) {
-                acc += 2;
-                }
-                player.moveRight(acc);
-            }, speed);
+                SetRight = setInterval(function() {
+                    if (acc <= acclimit) {
+                        acc += 2;
+                    }
+                    player.moveRight(acc);
+                }, speed);
             }
-        }
-        else if (e.changedTouches[0].pageX < width/2) {
+        } else if (e.changedTouches[0].pageX < width / 2) {
             clearInterval(stopLeft);
             clearInterval(SetRight);
             acc = 0;
@@ -1098,10 +1118,10 @@ if (mobile) {
     });
 }
 
-function GameLoop () {
+function GameLoop() {
     if (pause == false) {
         clear();
-        clouds.forEach(function (cloud, index) {
+        clouds.forEach(function(cloud, index) {
             if (cloud.isMoving == 1) {
                 if (cloud.X > width + cloudWidth) {
                     cloud.X = 0 - cloudWidth;
@@ -1113,7 +1133,7 @@ function GameLoop () {
             cloud.draw();
         });
 
-        platforms.forEach(function (platform, index) {
+        platforms.forEach(function(platform, index) {
             if (platform.isMoving) {
                 if (platform.X < 0) {
                     platform.direction = 1; //right
@@ -1127,37 +1147,37 @@ function GameLoop () {
             platform.draw();
             coins[index].update();
         });
-        mushrooms.forEach(function (mushroom, index) {
+        mushrooms.forEach(function(mushroom, index) {
             mushroom.update();
         });
-        flowers.forEach(function (flower, index) {
+        flowers.forEach(function(flower, index) {
             flower.update();
         });
 
-        
-        birds.forEach(function (bird, index) {
+
+        birds.forEach(function(bird, index) {
             if (bird.X > width + birdWidth) {
-                    bird.X = 0 - birdWidth;
+                bird.X = 0 - birdWidth;
             }
             bird.X += 4;
             if (bird.Up == true) {
-                if (bird.Temp <= 64){
-                bird.Y +=2;
-                bird.Temp = bird.Temp + 2;
+                if (bird.Temp <= 64) {
+                    bird.Y += 2;
+                    bird.Temp = bird.Temp + 2;
                 } else {
                     bird.Up = false;
                     bird.Down = true;
                 }
             }
             if (bird.Down == true) {
-                if (bird.Temp >= -64){
-                    bird.Y -=2;
-                    bird.Temp -=2;
+                if (bird.Temp >= -64) {
+                    bird.Y -= 2;
+                    bird.Temp -= 2;
                 } else {
                     bird.Up = true;
                     bird.Down = false;
-                }   
-            } 
+                }
+            }
             bird.update();
         });
 
@@ -1169,30 +1189,30 @@ function GameLoop () {
             requestAnimationFrame(GameLoop);
         else if (state == 2) StartMenu();
     } else {
-        ctx.shadowOffsetX = 2; 
-        ctx.shadowOffsetY = 2; 
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
         ctx.textBaseline = "center";
         ctx.textAlign = "center";
         ctx.fillText("Pause", width / 2, height / 2);
-        ctx.shadowOffsetX = 0; 
-        ctx.shadowOffsetY = 0; 
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
 }
 
-function StartMenu () {
+function StartMenu() {
     clear();
-    clouds.forEach(function (cloud, index) {
-            if (cloud.isMoving == 1) {
-                if (cloud.X > width + cloudWidth) {
-                    cloud.X = 0 - cloudWidth;
-                }
-                if (index%2 == 0) {
-                    cloud.X += cloud.direction / 2;
-                } else {
-                    cloud.X += cloud.direction / 3;
-                }
+    clouds.forEach(function(cloud, index) {
+        if (cloud.isMoving == 1) {
+            if (cloud.X > width + cloudWidth) {
+                cloud.X = 0 - cloudWidth;
             }
-            cloud.draw();
+            if (index % 2 == 0) {
+                cloud.X += cloud.direction / 2;
+            } else {
+                cloud.X += cloud.direction / 3;
+            }
+        }
+        cloud.draw();
     });
 
     var ground = new Image(),
@@ -1214,8 +1234,8 @@ function StartMenu () {
     // undo offset
     ctx.translate(-offset_x, -offset_y);
     // Конец костыля
-    
-    
+
+
     var title = new Image(),
         titleWidth = 355,
         titleHeight = 199;
@@ -1227,7 +1247,7 @@ function StartMenu () {
         shrubsWidth = 142,
         shrubsHeight = 32;
     shrubs.src = imageShrubs;
-    
+
 
     ctx.drawImage(shrubs, width - shrubsWidth * 1.5, height - groundHeight - shrubsHeight, shrubsWidth, shrubsHeight);
 
@@ -1252,13 +1272,13 @@ function StartMenu () {
         ctx.textBaseline = "top";
         ctx.textAlign = "center";
         ctx.shadowColor = "black";
-        ctx.shadowOffsetX = 2; 
-        ctx.shadowOffsetY = 2; 
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
         ctx.shadowBlur = 0;
-        ctx.fillText('\u00A9' + " yoursgk", width / 2, height - groundHeight*2);
-        ctx.shadowOffsetX = 0; 
-        ctx.shadowOffsetY = 0; 
-        
+        ctx.fillText('\u00A9' + " yoursgk", width / 2, height - groundHeight * 2);
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
         var menubuttons = new Image(),
             menubuttonsWidth = 180,
             menubuttonsHeight = 120;
@@ -1268,30 +1288,30 @@ function StartMenu () {
             soundbuttonsWidth = 80,
             soundbuttonsHeight = 120;
         soundbuttons.src = "img/soundbuttons2.png";
-        
-        ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75), menubuttonsWidth, menubuttonsHeight/2);
 
-        ctx.drawImage(soundbuttons, 0, 0, soundbuttonsWidth, soundbuttonsHeight/2, width/2 - soundbuttonsWidth + menubuttonsWidth/2, height/(2.75) + soundbuttonsHeight/2 + 20, soundbuttonsWidth, soundbuttonsHeight/2);
+        ctx.drawImage(menubuttons, 0, 0, menubuttonsWidth, menubuttonsHeight / 2, width / 2 - menubuttonsWidth / 2, height / (2.75), menubuttonsWidth, menubuttonsHeight / 2);
 
-        ctx.drawImage(soundbuttons, 0, soundbuttonsHeight/2, soundbuttonsWidth, soundbuttonsHeight/2, width/2 - menubuttonsWidth/2, height/(2.75) + soundbuttonsHeight/2 + 20, soundbuttonsWidth, soundbuttonsHeight/2);
+        ctx.drawImage(soundbuttons, 0, 0, soundbuttonsWidth, soundbuttonsHeight / 2, width / 2 - soundbuttonsWidth + menubuttonsWidth / 2, height / (2.75) + soundbuttonsHeight / 2 + 20, soundbuttonsWidth, soundbuttonsHeight / 2);
+
+        ctx.drawImage(soundbuttons, 0, soundbuttonsHeight / 2, soundbuttonsWidth, soundbuttonsHeight / 2, width / 2 - menubuttonsWidth / 2, height / (2.75) + soundbuttonsHeight / 2 + 20, soundbuttonsWidth, soundbuttonsHeight / 2);
 
         if (soundFlag == false) {
             ctx.font = '30px "Press Start 2P"';
             ctx.fillStyle = "red";
             ctx.textBaseline = "center";
             ctx.textAlign = "center";
-            ctx.fillText("X", width / 2 - soundbuttonsWidth/2 - 8, height/(2.75) + soundbuttonsHeight/2 + 38);
-            ctx.shadowOffsetX = 0; 
-            ctx.shadowOffsetY = 0; 
-        } 
+            ctx.fillText("X", width / 2 - soundbuttonsWidth / 2 - 8, height / (2.75) + soundbuttonsHeight / 2 + 38);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
         if (musicFlag == false) {
             ctx.font = '30px "Press Start 2P"';
             ctx.fillStyle = "red";
             ctx.textBaseline = "center";
             ctx.textAlign = "center";
-            ctx.fillText("X", width / 2 + soundbuttonsWidth/2 + 12, height/(2.75) + soundbuttonsHeight/2 + 38);
-            ctx.shadowOffsetX = 0; 
-            ctx.shadowOffsetY = 0; 
+            ctx.fillText("X", width / 2 + soundbuttonsWidth / 2 + 12, height / (2.75) + soundbuttonsHeight / 2 + 38);
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
         }
         ctx.font = '14px "Press Start 2P"';
         if (mobile) {
@@ -1303,13 +1323,15 @@ function StartMenu () {
         requestAnimFrame(StartMenu);
     else {
         clearTimeout();
-        GameLoop();
+        fadeOut();
+        setTimeout(GameLoop, 800);
+        //GameLoop();
     }
 }
 
 var pause = false;
 
-function Pause () {
+function Pause() {
     if (pause == false) {
         if (state == true) {
             soundPause.play();
