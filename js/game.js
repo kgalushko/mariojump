@@ -1325,7 +1325,6 @@ function StartMenu() {
         clearTimeout();
         fadeOut();
         setTimeout(GameLoop, 800);
-        //GameLoop();
     }
 }
 
