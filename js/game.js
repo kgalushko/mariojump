@@ -500,7 +500,6 @@ function Mushroom(x, y) {
             soundPowerUp.play();
             setTimeout(function() {
                 player.super = false;
-                soundPowerDown.play();
             }, player.superDuration);
         }
         this.checkEmpty();
@@ -1275,7 +1274,8 @@ function StartMenu() {
         ctx.shadowOffsetX = 2;
         ctx.shadowOffsetY = 2;
         ctx.shadowBlur = 0;
-        ctx.fillText('\u00A9' + " yoursgk", width / 2, height - groundHeight * 2);
+        ctx.fillText('\u00A9' + " yoursgk", width / 2, height - groundHeight * 2 + 30);
+        ctx.fillText("version: 0.1.8", width / 2, height - groundHeight * 2);
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
